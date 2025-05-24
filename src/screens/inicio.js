@@ -11,7 +11,7 @@ export default function inicio({ navigation }) {
     >
       <Image source={require('../../assets/logo.png')} style={styles.logo} />
       <Text style={styles.title}>UNIPAZ</Text>
-      <Text style={styles.subtitle}>LEGENDS OF BARRANCA</Text>
+      <Text style={styles.subtitle}>LEGENDS</Text>
       <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('login')}>
         <Text style={styles.buttonText}>JUGAR</Text>
       </TouchableOpacity>
