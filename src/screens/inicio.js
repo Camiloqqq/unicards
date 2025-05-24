@@ -18,6 +18,3 @@ export default function inicio({ navigation }) {
     </ImageBackground>
   );
 }
-
-
-//HOLA HOLA HOLA
