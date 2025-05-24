@@ -19,3 +19,5 @@ export default function inicio({ navigation }) {
   );
 }
 
+
+//HOLA HOLA HOLA
