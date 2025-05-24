@@ -29,7 +29,7 @@ export default function contacto() {
 <TouchableOpacity
 style={styles.perfilButton}
 onPress={() => navigation.navigate('perfil')}>
-<Text style={styles.perfilButtonText}>Perfil</Text>s
+<Text style={styles.perfilButtonText}>Perfil</Text>
 </TouchableOpacity>
 
     </View>
