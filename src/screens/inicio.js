@@ -17,6 +17,7 @@ export default function inicio({ navigation }) {
       </TouchableOpacity>
     </ImageBackground>
   );
+<<<<<<< HEAD
 }
 
 
@@ -24,3 +25,6 @@ export default function inicio({ navigation }) {
 
 
 
+=======
+}
+>>>>>>> 588989c82d6fc0297a1cc1908a468767922b4dde
