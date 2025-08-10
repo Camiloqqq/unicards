@@ -36,17 +36,7 @@ export const correoStyle = StyleSheet.create({
     alignSelf: 'center',
     marginBottom: 30,
   },
-  googleButton: {
-    alignSelf: 'center',
-    marginBottom: 30,
-    backgroundColor: '#f1f1f1',
-    padding: 10,
-    borderRadius: 50,
-  },
-  googleIcon: {
-    width: 30,
-    height: 30,
-  },
+ 
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',

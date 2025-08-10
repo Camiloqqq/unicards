@@ -1,89 +1,94 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  View, Text, TextInput, TouchableOpacity,
-  StyleSheet, Image
+  View, Text, TextInput, TouchableOpacity, Alert,
+  Keyboard, Animated, Easing
 } from 'react-native';
-import * as WebBrowser from 'expo-web-browser';
-import * as Google from 'expo-auth-session/providers/google';
 import { AntDesign, Feather, MaterialIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import * as Animatable from 'react-native-animatable';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-// ¡IMPORTANTE! Tus imports de Firebase
-import { auth, db } from '../config/firebase';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { setDoc, doc } from 'firebase/firestore';
-
 import { correoStyle as styles } from './style/correoStyle';
-
-WebBrowser.maybeCompleteAuthSession();
 
 export default function Correo() {
   const navigation = useNavigation();
-  const loginRef  = useRef(null);
+  const translateY = useRef(new Animated.Value(0)).current;
 
-  const [email, setEmail]           = useState('');
-  const [username, setUsername]     = useState('');
-  const [password, setPassword]     = useState('');
-
-  // Google Auth 
-  const [request, response, promptAsync] = Google.useAuthRequest({
-    androidClientId: 'TU_CLIENT_ID_ANDROID',
-    iosClientId:     'TU_CLIENT_ID_IOS',
-    webClientId:     'TU_CLIENT_ID_WEB',
-  });
+  const [correo, setCorreo] = useState('');
+  const [usuario, setUsuario] = useState('');
+  const [contraseña, setContraseña] = useState('');
 
   useEffect(() => {
-    if (response?.type === 'success') {
-      const { authentication } = response;
-      console.log('Token Google:', authentication.accessToken);
-      // crear o actualizar usuario 
-    }
-  }, [response]);
+    const showSub = Keyboard.addListener('keyboardDidShow', () => {
+      Animated.timing(translateY, {
+        toValue: -250, 
+        duration: 300,
+        easing: Easing.out(Easing.ease),
+        useNativeDriver: true
+      }).start();
+    });
 
-  //  Función que maneja el registro en Firebase
-  const handleSignUp = async () => {
-    try {
-      // 1) Crear usuario 
-      const userCred = await createUserWithEmailAndPassword(auth, email, password);
-      const { uid }  = userCred.user;
+    const hideSub = Keyboard.addListener('keyboardDidHide', () => {
+      Animated.timing(translateY, {
+        toValue: 0,
+        duration: 300,
+        easing: Easing.out(Easing.ease),
+        useNativeDriver: true
+      }).start();
+    });
 
-      // 2) Guardar nombre de usuario 
-      await setDoc(doc(db, 'usuarios', uid), {
-        correo:       email,
-        nombreUsuario: username,
-        cartas:       []  
-      });
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
-      // 3) Navegar a Home
-      navigation.replace('home');
-    } catch (error) {
-      console.error('Error al registrarse:', error.message);
-      alert('Error: ' + error.message);
-    }
+  const handleClose = () => {
+    navigation.goBack();
   };
 
-  const handleClose = async () => {
-    if (loginRef.current) {
-      await loginRef.current.animate('slideOutDown', 400);
+  const handleRegistro = async () => {
+    if (!correo || !usuario || !contraseña) {
+      Alert.alert('OIGA', 'Por favor completa todos los campos mi bro.');
+      return;
     }
-    navigation.goBack();
+
+    try {
+      const response = await fetch('http://192.168.20.241:3000/api/users/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nombre: usuario,
+          correo: correo,
+          contraseña: contraseña
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        Alert.alert('Registro exitoso', data.message);
+        navigation.navigate('home');
+      } else {
+        Alert.alert('Error', data.error || 'No se pudo registrar');
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Error', 'Error al conectar con el servidor');
+    }
   };
 
   return (
     <SafeAreaView style={styles.outerContainer}>
-      <TouchableOpacity 
-        style={styles.background} 
-        activeOpacity={1} 
+      <TouchableOpacity
+        style={styles.background}
+        activeOpacity={1}
         onPress={handleClose}
       />
-      
-      <Animatable.View
-        animation="slideInUp"
-        duration={500}
-        ref={loginRef}
-        style={styles.container}
+
+      <Animated.View
+        style={[
+          styles.container,
+          { transform: [{ translateY }] }
+        ]}
       >
         <TouchableOpacity style={styles.closeBtn} onPress={handleClose}>
           <AntDesign name="close" size={24} color="#333" />
@@ -91,49 +96,37 @@ export default function Correo() {
 
         <Text style={styles.title}>¡Comencemos!</Text>
 
-        <TouchableOpacity style={styles.googleButton} onPress={() => promptAsync()}>
-          <Image
-            source={{
-              uri: 'https://imagepng.org/wp-content/uploads/2019/08/google-icon.png',
-            }}
-            style={styles.googleIcon}
-          />
-        </TouchableOpacity>
-
-        {/* ➤ Input Correo */}
         <View style={styles.inputContainer}>
           <Feather name="mail" size={20} color="#333" />
           <TextInput
-            placeholder="Correo"
+            placeholder='Correo'
             style={styles.input}
+            value={correo}
+            onChangeText={setCorreo}
             keyboardType="email-address"
             autoCapitalize="none"
-            value={email}
-            onChangeText={setEmail}
           />
         </View>
 
-        {/* ➤ Input Nombre de usuario */}
         <View style={styles.inputContainer}>
           <Feather name="user" size={20} color="#333" />
           <TextInput
-            placeholder="Nombre de usuario"
+            placeholder='Usuario'
             style={styles.input}
+            value={usuario}
+            onChangeText={setUsuario}
             autoCapitalize="none"
-            value={username}
-            onChangeText={setUsername}
           />
         </View>
 
-        {/* Contraseña */}
         <View style={styles.inputContainer}>
           <MaterialIcons name="lock-outline" size={20} color="#333" />
           <TextInput
-            placeholder="Contraseña"
-            secureTextEntry
+            placeholder='Contraseña'
             style={styles.input}
-            value={password}
-            onChangeText={setPassword}
+            secureTextEntry
+            value={contraseña}
+            onChangeText={setContraseña}
           />
         </View>
 
@@ -141,11 +134,10 @@ export default function Correo() {
           Al menos 8 caracteres, 1 letra mayúscula, 1 número, 1 símbolo
         </Text>
 
-        {/*  Botón Registrarse */}
-        <TouchableOpacity style={styles.signupButton} onPress={handleSignUp}>
-          <Text style={styles.signupText}>Sign Up</Text>
+        <TouchableOpacity style={styles.signupButton} onPress={handleRegistro}>
+          <Text style={styles.signupText}>Registrarse</Text>
         </TouchableOpacity>
-      </Animatable.View>
+      </Animated.View>
     </SafeAreaView>
   );
 }
